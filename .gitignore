@@ -107,3 +107,6 @@ venv.bak/
 .DS_Store
 .Rproj.user
 /tags.*
+
+
+.Rhistory
