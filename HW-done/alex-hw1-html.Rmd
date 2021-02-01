@@ -44,3 +44,43 @@ graphviz.plot(dag)
 ```
 
 
+## Question 2: Experimenting with graph utilities (5 points)
+
+### 2.1
+Extract and print the nodes and arcs of the DAG you created in previous questions. (1 point)
+```{r nodes}
+nodes(dag)
+arcs(dag)
+```
+
+### 2.2
+Extract and print the parents and the children of each node using `parents` and `children` functions. (1 point)
+```{r parents}
+for(n in nodes(dag)) {
+  cat(n, "'s parents are: '", parents(dag,n), "'.  ")
+  cat(n, "'s children are: '", children(dag,n), "'")
+  cat("\n")
+}
+```
+
+### 2.3
+Use the `mb` function to extract the Markov blanket of A, E, and T. (1 point)
+
+```{r mb}
+mb(dag, "A")
+mb(dag, "E")
+mb(dag, "T")
+```
+
+### 2.4
+How do you identify the Markov blanket from the DAG? (1 point)
+For node N Markov blanked is identified as its parents, its children and parents of those children, or
+in R code:
+(?) Should it be expressed in code?
+
+### 2.5
+Describe, in terms of coniditional independence (NOT in terms of the DAG) the definition of a Markov blanket. (1 point)
+
+If M = Markov Blanket of variable Y from set of random variables S then Y when conditioned on M is indpendent on any subset X of set S provided
+$X \bigcap M=\emptyset$
+
