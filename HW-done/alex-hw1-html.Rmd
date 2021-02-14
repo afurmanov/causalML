@@ -98,6 +98,7 @@ bn.bayesDefault <- bn.fit(dag, data = survey, method = "bayes")
 
 ### 3.2
 Play with the Bayesian prior parameter **iss** and report the changes in the parameters learned from Bayesian network. Explain the changes. (3 points)
+```{r bayes-iss}
 sink("bn.bayes_iss_default")
 bn.fit(dag, data = survey, method = "bayes")
 sink()
@@ -122,13 +123,86 @@ sink("bn.bayes_iss_1000")
 bn.fit(dag, data = survey, method = "bayes", iss=1000)
 sink()
 
+sink("bn.bayes_iss_1000000")
+bn.fit(dag, data = survey, method = "bayes", iss=1000000)
+sink()
+```
+
 Explanation of differences in conditional propabilities for various `iss` argument:
 
-Apparently with small `iss` parameter values conditional probabilities are almost the same.
-Since `iss` represent sample size, and data set has a 660 entries -
-the Bayesian conditional probabily inference would have 660 "iterations" for
-sample size 1, 66 iterations for sample size 10 and 1 iteration for sample size 1000.
-It appears the conditional propabibilites calculated with number of iterations > 10 are
-in much better agreement with values than conditional probabilies calculated with small
-number of iterations (< 10). If this assumption is true than the more iterations are performed
-the more precise result is. It also implies not to use large values for `iss` parameter.
+Since `iss` represents sample size of imaginary prior distribution, which is uniform distribution,
+the large value for `iss` we use the closer conditional probabilities become to uniform distribution.
+It is especially demonstrated by latest example (iss=1000000), where calculated probabilities are very very close
+to uniform distribution. Also, when `iss` <= 10, calculated conditionl probabilities are almost
+identical, which means prior distribution does not play any significant role and since assigning
+prior distribution to uniform is an actually a very wild guess, it means smaller `iss` values are is
+what should be used in order to get "right" values of conditional probabilities (i.e. where effect of inital
+prior is eliminated)
+
+### 5.1
+Compute and plot the PDAG of the DAG for the survey data using the `cpdag` function.  Call this PDAG P1 and the original DAG D1.  How does P1 and D1 compare?  Explain any similarities or differences. (1 point)
+
+```{r cpdag}
+d1 <- dag
+p1 <- cpdag(d1)
+graphviz.plot(p1)
+```
+Explanation of result: p1 is identical to d1 because any arrow reversal in p1 would change set of open V-structures:
+i.e. reversing O->E would create new open V structure: O->E<-A which cannot be found in d1
+
+### 5.2 Create a DAG D2 that is the same as D1 except that it has a new arc from Occupation to Residence. This makes sense because surely somebody's
+job determines where they live (or is it the other way around?).  Note
+that this is a fine example of applying domain knowledge about the
+data generative process in causal model development. Plot the result
+with `graphviz.plot`. Now recompute a PDAG P2 from D2.  What, if
+anything, is different between P1 and P2 and what explains these
+differences or lack of differences? (1 point)
+
+```{r dag2}
+d2 <- model2network("[A][S][E|A:S][O|E][R|E:O][T|O:R]")
+graphviz.plot(d2)
+p2 <- cpdag(d2)
+graphviz.plot(p2)
+```
+
+p1 is different than p2 and differences are:
+                                            
+  - skeletal difference, p2 has an extra edge R - O                                            
+  - Edge R-O has no direction, which meas whatever direction is assigned to it, set of open
+     V-structures remain the same.
+
+### 5.3 Create a third DAG D3 that is different from the second DAG
+(with the O->R edge) but is in the same Markov equivalence class. Do
+this by reasoning about P2 -- in other words look at P2 and create
+another DAG D3, such that `cpdag(D3)` will also produce P2. Plot
+D3. (1 point)
+
+```{r dag3}
+d3 <- model2network("[A][S][E|A:S][O|E:R][R|E][T|O:R]")
+graphviz.plot(d3)
+```
+
+d3 could be built by assigning different than in d2 direction between
+O and R (i.e. R->O) , because it is a node in p2 not having any
+direction (i.e. reversible)
+
+### 5.4
+Calculate the log-likelihood of the data given D2 and the
+log-likelihood of the data given D3.  These values should be the same,
+explain why.  You can use the `score` function with the argument
+`type = 'loglik`, or you can simply se the `logLik` function, which is
+just a wrapper for `score`.  You dont need to provide paramter values
+for the CPDs of the DAG, `score` will estimate them for you. (1 point)
+
+```{r score}
+score(d2, survey, type="loglik")
+score(d3, survey, type="loglik")
+```
+
+Calculated scores are same because conditional indpendencies extracted
+from data ("survey2.txt") could be equally described by both graphs -
+d2 and d3.
+
+## Question 6: Modeling and Inference using Pyro (18 points)
+
+If you are new to tensor-based frameworks, make sure you give yourself plenty of time for this question.  It takes time to get used to debugging.  One common source of bugs is integers, *pyro* prefers you use floats (e.g., `torch.tensor(1.0)` instead of `torch.tensor(1)`).  If you hit a bug and solve it, why not share with your classmates on Piazza?
