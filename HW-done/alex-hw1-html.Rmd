@@ -84,3 +84,51 @@ Describe, in terms of coniditional independence (NOT in terms of the DAG) the de
 If M = Markov Blanket of variable Y from set of random variables S then Y when conditioned on M is indpendent on any subset X of set S provided
 $X \bigcap M=\emptyset$
 
+## Question 3: Conditional probability distribution (CPD) parameter estimation (5 points)
+
+Bayesian network = DAG + CPD with specified parameters
+
+### 3.1
+Fit the parameters of the DAG from the data stored in survey2.txt using Bayesian estimation, and save the result into an object of class bn.fit. (2 points)
+```{r bn.fit}
+survey <- read.table("/Users/alex/i/causalML/HW/hw1_release/survey2.txt", header = TRUE)
+survey[] <- lapply(survey, function(x) as.factor(x))
+bn.bayesDefault <- bn.fit(dag, data = survey, method = "bayes")
+```
+
+### 3.2
+Play with the Bayesian prior parameter **iss** and report the changes in the parameters learned from Bayesian network. Explain the changes. (3 points)
+sink("bn.bayes_iss_default")
+bn.fit(dag, data = survey, method = "bayes")
+sink()
+
+sink("bn.bayes_iss_1")
+bn.fit(dag, data = survey, method = "bayes", iss=1)
+sink()
+
+sink("bn.bayes_iss_5")
+bn.fit(dag, data = survey, method = "bayes", iss=5)
+sink()
+
+sink("bn.bayes_iss_10")
+bn.fit(dag, data = survey, method = "bayes", iss=10)
+sink()
+
+sink("bn.bayes_iss_100")
+bn.fit(dag, data = survey, method = "bayes", iss=100)
+sink()
+
+sink("bn.bayes_iss_1000")
+bn.fit(dag, data = survey, method = "bayes", iss=1000)
+sink()
+
+Explanation of differences in conditional propabilities for various `iss` argument:
+
+Apparently with small `iss` parameter values conditional probabilities are almost the same.
+Since `iss` represent sample size, and data set has a 660 entries -
+the Bayesian conditional probabily inference would have 660 "iterations" for
+sample size 1, 66 iterations for sample size 10 and 1 iteration for sample size 1000.
+It appears the conditional propabibilites calculated with number of iterations > 10 are
+in much better agreement with values than conditional probabilies calculated with small
+number of iterations (< 10). If this assumption is true than the more iterations are performed
+the more precise result is. It also implies not to use large values for `iss` parameter.

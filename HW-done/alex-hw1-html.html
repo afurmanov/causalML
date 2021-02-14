@@ -458,6 +458,21 @@ summary {
 <p>If M = Markov Blanket of variable Y from set of random variables S then Y when conditioned on M is indpendent on any subset X of set S provided <span class="math inline">\(X \bigcap M=\emptyset\)</span></p>
 </div>
 </div>
+<div id="question-3-conditional-probability-distribution-cpd-parameter-estimation-5-points" class="section level2">
+<h2>Question 3: Conditional probability distribution (CPD) parameter estimation (5 points)</h2>
+<p>Bayesian network = DAG + CPD with specified parameters</p>
+<div id="section-10" class="section level3">
+<h3>3.1</h3>
+<p>Fit the parameters of the DAG from the data stored in survey2.txt using Bayesian estimation, and save the result into an object of class bn.fit. (2 points)</p>
+<pre class="r"><code>survey &lt;- read.table(&quot;/Users/alex/i/causalML/HW/hw1_release/survey2.txt&quot;, header = TRUE)
+survey[] &lt;- lapply(survey, function(x) as.factor(x))
+bn.mle &lt;- bn.fit(dag, data = survey, method = &quot;bayes&quot;)</code></pre>
+</div>
+<div id="section-11" class="section level3">
+<h3>3.2</h3>
+<p>Play with the Bayesian prior parameter <strong>iss</strong> and report the changes in the parameters learned from Bayesian network. Explain the changes. (3 points)</p>
+</div>
+</div>
 
 
 
