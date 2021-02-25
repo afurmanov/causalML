@@ -60,7 +60,6 @@ histogram_cond = Counter(samples_cond)
 for key in histogram_cond:
     histogram_cond[key] /= samples_total
     
-print(f'marginal distribution of T given E=uni: {histogram_cond}')
-# marginal distribution of T given E=uni: Counter({0: 0.689, 2: 0.164, 1: 0.147})
-# means of travel: Car – 69%, train - 15%, other - 16%
+print(f"""marginal distribution of T given E=uni:
+{histogram_cond}""")
 

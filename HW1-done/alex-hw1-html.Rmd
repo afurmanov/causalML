@@ -278,8 +278,10 @@ samples_cond = [int(condtioned_on_E_uni()[5]) for i in range (samples_total)]
 histogram_cond = Counter(samples_cond)
 for key in histogram_cond:
     histogram_cond[key] /= samples_total
-    
-print(f'marginal distribution of T given E=uni, i.e. means of travel (0 - Car, 1 - Other, 2 - Train): {histogram_cond}')
+
+print(f"""marginal distribution of T given E=uni:
+(i.e. means of travel, where Car: 0, Other: 1, Train:2)
+{histogram_cond}""")
 ```
 
 
