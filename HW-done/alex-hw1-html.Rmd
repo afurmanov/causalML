@@ -1,6 +1,8 @@
 ---
 title: "alex-hw1-html.rmd"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -212,79 +214,72 @@ use floats (e.g., `torch.tensor(1.0)` instead of `torch.tensor(1)`).
 If you hit a bug and solve it, why not share with your classmates on
 Piazza?
     
-### 6.1 Modeling 
+### 6.1 Modeling
 
-Use *pyro* to reimplement the Bayesian network with parameter values
-you fitted in question 3. Use default *iss* values and round parameter
-estimates to 2 decimal places. When coding conditional probability
-table using tensor, make sure its meaning is clear for the purpose of
-easy debugging and readability. You can use comments or alias as shown
-here. In this example, it is clear that `P('on')=0.8, and P('off')=0.2`.
+```{python model}
+import torch
+import pyro
+from pyro.distributions import Categorical
+import torch
+from collections import Counter
+
+pyro.set_rng_seed(101)
+
+prob_A = torch.tensor([0.36, 0.16, 0.48]) # A=adult, A=old, A=young
+
+prob_S = torch.tensor([0.55, 0.45]) #S=F, S=M
+
+prob_E = torch.tensor([
+    [[0.64, 0.36], #E=high|S=F,A=adult, E=uni|S=F,A=adult
+    [0.84, 0.16],  #E=high|S=F,A=old,   E=uni|S=F,A=old
+    [0.16, 0.84]], #E=high|S=F,A=young, E=uni|S=F,A=young
+
+    [[0.72, 0.28], #E=high|S=M,A=adult, E=uni|S=M,A=adult
+    [0.89, 0.11],  #E=high|S=M,A=old,   E=uni|S=M,A=old
+    [0.81, 0.19]], #E=high|S=M,A=young, E=uni|S=M,A=young
+    ])
+
+prob_O = torch.tensor([
+    [0.98, 0.02], #O=emp|E=high,  O=self|E=high
+    [0.97, 0.03]  #O=emp|E=uni,   O=self|E=uni
+    ])
 
 
-```
-X_alias = ['off', 'on']
-prob_X = tensor([0.2, 0.8])
-```
+prob_R = torch.tensor([
+    [0.72, 0.28], #R=big|E=high, R=small|E=high
+    [0.94, 0.06]  #R=big|E=uni,  R=small|E=uni
+    ])
 
+prob_T = torch.tensor([
+    [[0.71, 0.14, 0.15], #T=car|R=big,O=emp, T=other|R=big,O=emp, T=train|R=big,O=emp
+    [0.68, 0.16, 0.16]], #T=car|R=big,O=self, T=other|R=big,O=self, T=train|R=big,O=self
 
-When there are multiple variables conditioned on, make sure the order
-they are coded match the order they are sampled in the model. For
-example, assuming $Z \in \{z1, z2\}$ is conditioned on $X \in \{x1,
-x2, x3\}$ and $Y \in \{y1, y2\}$, the Conditional Probability Table
-(CPT) of Z can be coded in two ways ($a$ and $b$ here), each
-corresponds to a different order of the dimensions when generating
-sample of Z using pyro.sample. It is suggested that you write comments
-on what probability it is (e.g.P(Z=z1|X=x1,Y=y1)) for each entry in
-the CPT. (6 points)
+    [[0.55, 0.08, 0.37], #T=car|R=small,O=emp, T=other|R=small,O=emp, T=train|R=small,O=emp
+    [0.73, 0.25, 0.02]], #T=car|R=small,O=self, T=other|R=small,O=self, T=train|R=small,O=self
+    ])
 
-```
-prob_X = tensor([P(X=x1), P(X=x2)])
-prob_Y = tensor([P(Y=y1), P(Y=y2)])
-
-a.
-prob_Z = tensor([[[P(Z=z1|X=x1,Y=y1), P(Z=z2|X=x1,Y=y1)],
-                  [P(Z=z1|X=x1,Y=y2), P(Z=z2|X=x1,Y=y2)]],
-                  
-                  [P(Z=z1|X=x2,Y=y1), P(Z=z2|X=x2,Y=y1)],
-                  [P(Z=z1|X=x2,Y=y2), P(Z=z2|X=x2,Y=y2)]],
-                  
-                  [P(Z=z1|X=x3,Y=y1), P(Z=z2|X=x3,Y=y1)],
-                  [P(Z=z1|X=x3,Y=y2), P(Z=z2|X=x3,Y=y2)]]])
-
-X = pyro.sample("Z", dist.Categorical(probs=prob_X))      
-Y = pyro.sample("Z", dist.Categorical(probs=prob_Y))  
-Z = pyro.sample("Z", dist.Categorical(probs=prob_Z[X][Y]))
-                  
-b.             
-prob_Z = tensor([[[P(Z=z1|X=x1,Y=y1), P(Z=z2|X=x1,Y=y1)],
-                  [P(Z=z1|X=x2,Y=y1), P(Z=z2|X=x2,Y=y1)],
-                  [P(Z=z1|X=x3,Y=y1), P(Z=z2|X=x3,Y=y1)]],
-                  
-                  [P(Z=z1|X=x1,Y=y2), P(Z=z2|X=x1,Y=y2)],
-                  [P(Z=z1|X=x2,Y=y2), P(Z=z2|X=x2,Y=y2)],
-                  [P(Z=z1|X=x3,Y=y2), P(Z=z2|X=x3,Y=y2)]]])
-
-X = pyro.sample("Z", dist.Categorical(probs=prob_X))      
-Y = pyro.sample("Z", dist.Categorical(probs=prob_Y)) 
-Z = pyro.sample("Z", dist.Categorical(probs=prob_Z[Y][X]))         
+def transportation():
+    S=pyro.sample("S", Categorical(probs=prob_S))
+    A=pyro.sample("A", Categorical(probs=prob_A))
+    E=pyro.sample("E", Categorical(probs=prob_E[S][A]))
+    O=pyro.sample("O", Categorical(probs=prob_O[E]))
+    R=pyro.sample("R", Categorical(probs=prob_R[E]))
+    T=pyro.sample("T", Categorical(probs=prob_T[R][O]))
+    return A, R, E, O, S, T
 ```
 
+# 6.2.a Forward casual inference
 
-### 6.2 Inference
+```{python forward_sampling}
+samples_total = 10000
+condtioned_on_E_uni = pyro.condition(transportation, data={"E": torch.tensor(1)})
+samples_cond = [int(condtioned_on_E_uni()[5]) for i in range (samples_total)]
 
-There are two broad categories of causal inference questions, one is to predict effects from causes, referred to as forward causal inference, and the other is to predict causes from effects, referred to as reverse causal inference. Forward causal inference is straightforward to do through forward sampling, without the need of any inference algorithm. Forward sampling doesn't work for reverse causal inference, since there is no guarantee the sample generated matches the evidence we observed. An easy solution is rejection sampling, which rejects all the samples that do not match the evidence. But it can be very inefficient when the probability of the observed evidence is very small. An improvement is likelihood weighting, a special case of importance sampling, which samples unobserved variables like in forward sampling, but sets the observed variables to the same value as evidence, and weights each sample by its likelihood. An caveat of importance sampling is its accuracy depends on how close the proposal distribution is to the target distribution. In the case of Bayesian network, the proposal distribution is often the CPTs, and the target distribution is the posterior distribution we want to estimate. (For details of the theory of different sampling methods, see "Probabilistic Graphical Models" Chapter 12)
-
-Pyro has implemented many inference algorithms including importance sampling, and we encourage you to experiment with them. Detailed understanding about how these methods work in Pyro is not a requirement. For the purpose of the homework, it's sufficient to have a high level understanding of the general idea and be able to use at least one of the inference algorithms in Pyro in your model. 
-
-Most of the inference algorithms implemented in Pyro are approximate inference algorithms either through sampling or variational inference. Exact inference using variable elimination is NP hard. It becomes intractable when the model is large. However, most models in homeworks are fairly small. Although inference can be done manually without much efforts in small networks, inference using Pyro is required in this question.
-
-#### 6.2.a
-
-Implement forward causal inference using `pyro.condition`. Assuming you observed a person with a university degree. What is your prediction of this person's means of travel? Provide a histogram of the marginal distribution on the variable "T". (6 points)
-
-
-#### 6.2.b
-
-Implement reverse causal inference using `pyro.condition` and an inference algorithm in Pyro. Assuming you observed a self-employed person who lives in a big city. What is your prediction of this person's age?  Provide a histogram of the marginal on the variable "A". (6 points)
+histogram_cond = Counter(samples_cond)
+for key in histogram_cond:
+    histogram_cond[key] /= samples_total
     
+print(f'marginal distribution of T given E=uni, i.e. means of travel (0 - Car, 1 - Other, 2 - Train): {histogram_cond}')
+```
+
+

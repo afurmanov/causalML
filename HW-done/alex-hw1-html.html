@@ -1037,11 +1037,77 @@ graphviz.plot(d3)</code></pre>
 <pre><code>## [1] -2350.686</code></pre>
 <pre class="r"><code>score(d3, survey, type=&quot;loglik&quot;)</code></pre>
 <pre><code>## [1] -2350.686</code></pre>
+<p>Calculated scores are same because conditional indpendencies extracted from data (“survey2.txt”) could be equally described by both graphs - d2 and d3.</p>
 </div>
 </div>
 <div id="question-6-modeling-and-inference-using-pyro-18-points" class="section level2">
 <h2>Question 6: Modeling and Inference using Pyro (18 points)</h2>
 <p>If you are new to tensor-based frameworks, make sure you give yourself plenty of time for this question. It takes time to get used to debugging. One common source of bugs is integers, <em>pyro</em> prefers you use floats (e.g., <code>torch.tensor(1.0)</code> instead of <code>torch.tensor(1)</code>). If you hit a bug and solve it, why not share with your classmates on Piazza?</p>
+<div id="modeling" class="section level3">
+<h3>6.1 Modeling</h3>
+<pre class="python"><code>import torch
+import pyro
+from pyro.distributions import Categorical
+import torch
+from collections import Counter
+
+pyro.set_rng_seed(101)
+
+prob_A = torch.tensor([0.36, 0.16, 0.48]) # A=adult, A=old, A=young
+
+prob_S = torch.tensor([0.55, 0.45]) #S=F, S=M
+
+prob_E = torch.tensor([
+    [[0.64, 0.36], #E=high|S=F,A=adult, E=uni|S=F,A=adult
+    [0.84, 0.16],  #E=high|S=F,A=old,   E=uni|S=F,A=old
+    [0.16, 0.84]], #E=high|S=F,A=young, E=uni|S=F,A=young
+
+    [[0.72, 0.28], #E=high|S=M,A=adult, E=uni|S=M,A=adult
+    [0.89, 0.11],  #E=high|S=M,A=old,   E=uni|S=M,A=old
+    [0.81, 0.19]], #E=high|S=M,A=young, E=uni|S=M,A=young
+    ])
+
+prob_O = torch.tensor([
+    [0.98, 0.02], #O=emp|E=high,  O=self|E=high
+    [0.97, 0.03]  #O=emp|E=uni,   O=self|E=uni
+    ])
+
+
+prob_R = torch.tensor([
+    [0.72, 0.28], #R=big|E=high, R=small|E=high
+    [0.94, 0.06]  #R=big|E=uni,  R=small|E=uni
+    ])
+
+prob_T = torch.tensor([
+    [[0.71, 0.14, 0.15], #T=car|R=big,O=emp, T=other|R=big,O=emp, T=train|R=big,O=emp
+    [0.68, 0.16, 0.16]], #T=car|R=big,O=self, T=other|R=big,O=self, T=train|R=big,O=self
+
+    [[0.55, 0.08, 0.37], #T=car|R=small,O=emp, T=other|R=small,O=emp, T=train|R=small,O=emp
+    [0.73, 0.25, 0.02]], #T=car|R=small,O=self, T=other|R=small,O=self, T=train|R=small,O=self
+    ])
+
+def transportation():
+    S=pyro.sample(&quot;S&quot;, Categorical(probs=prob_S))
+    A=pyro.sample(&quot;A&quot;, Categorical(probs=prob_A))
+    E=pyro.sample(&quot;E&quot;, Categorical(probs=prob_E[S][A]))
+    O=pyro.sample(&quot;O&quot;, Categorical(probs=prob_O[E]))
+    R=pyro.sample(&quot;R&quot;, Categorical(probs=prob_R[E]))
+    T=pyro.sample(&quot;T&quot;, Categorical(probs=prob_T[R][O]))
+    return A, R, E, O, S, T</code></pre>
+</div>
+</div>
+<div id="a-forward-casual-inference" class="section level1">
+<h1>6.2.a Forward casual inference</h1>
+<pre class="python"><code>samples_total = 10000
+condtioned_on_E_uni = pyro.condition(transportation, data={&quot;E&quot;: torch.tensor(1)})
+samples_cond = [int(condtioned_on_E_uni()[5]) for i in range (samples_total)]
+
+histogram_cond = Counter(samples_cond)
+for key in histogram_cond:
+    histogram_cond[key] /= samples_total
+    
+print(f&#39;marginal distribution of T given E=uni, i.e. means of travel (0 - Car, 1 - Other, 2 - Train): {histogram_cond}&#39;)</code></pre>
+<pre><code>## marginal distribution of T given E=uni, i.e. means of travel (0 - Car, 1 - Other, 2 - Train): Counter({0: 0.7011, 2: 0.1648, 1: 0.1341})</code></pre>
 </div>
 
 
