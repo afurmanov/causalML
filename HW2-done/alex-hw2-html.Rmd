@@ -1,0 +1,75 @@
+---
+title: "alex-hw2-html.rmd"
+output:
+  ## pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(bnlearn)
+```
+
+
+```{r net}
+netStr <- "[A][S][E|A:S][O|E][R|E][T|O:R]"
+net <- model2network(netStr)
+d_sep <- bnlearn:::dseparation
+d_sep(bn = net, x = 'A', y = 'E', z = c('R', 'T'))
+```
+
+```{r bruteforce}
+vars <- nodes(net)
+pairs <- combn(x = vars, 2, list)
+arg_sets <- list()
+for(pair in pairs) {
+  others <- setdiff(vars, pair)
+  conditioning_sets <- unlist(lapply(0:4, function(.x) combn(others, .x, list)), recursive = F)
+  for(set in conditioning_sets) {
+    args <- list(x = pair[1], y = pair[2], z = set)
+    arg_sets <- c(arg_sets, list(args))
+  }
+}
+```
+
+## Question 1: D-separation and global Markov property assumption
+
+### 1.a True d-separation statements (4 points)
+Create a new list. Iterate through the list of argument sets and evaluate if the d-separation statement is true. If a statement is true, add it to the list.  Show code.  Print an element from the list and write out the d-separation statement in English. 
+
+```{r all d-separations}
+d_seps <- list()
+for (arg_set in arg_sets) {
+    if (d_sep(bn=net, x=arg_set$x, y=arg_set$y, z=arg_set$z)) {
+      d_seps <- c(d_seps, list(arg_set))
+    }
+}
+for (ds in d_seps) {
+  ## “A is d-separated from E by R and T”.
+  cat(ds$x, "is d-separated from", ds$y,  "by", ds$z, "\n")
+}
+```
+
+### 1.b Redundant d-separation statements (3 points)
+
+Given two d-separation statements A and B, if A implies B, then we can say B is a redundant statement. This list is going to have some redundant statements. Print out an example of two elements in the list, where one one element implies other element.  Write both of them out as d-separation statements, and explain the redundancy in plain English. 
+
+Two redundant statements are:
+```                             
+X: "A is d-separated from O by E"
+Y: "A is d-separated from O by E R"
+```
+
+Statement X implies statement Y because:
+                                    
+  a. they are different only by  set of conditioning sets
+  b. conditioning sets in statement X is subset of conditioning set in statement Y
+  c. "extra" variables in conditioning set in statement Y {R} = {E, R}-{E} is not collider, i.e.
+   adding non-collider to conditioning set should not change d-separation statement
+
+                             
+## graphviz.plot(net)
+
+
+
+
