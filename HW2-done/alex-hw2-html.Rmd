@@ -67,8 +67,43 @@ Statement X implies statement Y because:
   c. "extra" variables in conditioning set in statement Y {R} = {E, R}-{E} is not collider, i.e.
    adding non-collider to conditioning set should not change d-separation statement
 
-                             
-## graphviz.plot(net)
+
+### 1.c Improve the brute-force algorithm for finding true d-separation statements (1 point)
+
+Based on this understanding of redundancy, how could this algorithm for finding true d-separation statements be made more efficient?
+[skipped]
+
+
+### 1.d Conditional independence test on true d-separation statements (4 points)
+
+A joint distribution ${P_{\mathbb{X}}}$ is said to satisfy **global Markov property** with respect to DAG ${\mathbb{G}}$ if $A \perp_{\mathbb{G}}B|C \Rightarrow  A \perp_{P_{\mathbb{X}} }B|C$ for all disjoint vertex sets A, B, C. In other words, every true d-separation statement in the DAG corresponds to a true conditional independence statement in the joint probability distribution.  We don't know the true underlying joint probability distribution that generated this data, but we do have the data.  That means we can do statistical tests for conditional independence, and use some quick and dirty statistical decision theory to decide whether a conditional independence statement is true or false.
+
+The `ci.test` function in `bnlearn` does statistical tests for conditional independence.  The null hypothesis in this test is that the conditional independence is true.  So our decision critera is going to be:
+
+> If p value is below a .05 significance threshold, conclude that the conditional independence statement is false  Otherwise conclude it is true.
+
+```{r}
+.data <- read.table("survey.txt", header = TRUE)
+.data[] <- lapply(survey, function(x) as.factor(x))
+
+test_outcome <- ci.test('T', 'E', c('O', 'R'), .data)
+print(test_outcome)
+print(test_outcome$p.value)
+alpha <- .05
+print(test_outcome$p.value > alpha)
+```
+
+Evaluate the global Markov property assumption by doing a conditional independence test for each true d-separation statement. Print any test results where the p-value is not greater than .05.
+
+```{r}
+for (ds in d_seps) {
+  p_test <- ci.test(ds$x, ds$y, ds$z, .data)
+  if (p_test$p.value <= 0.05) {
+    cat(ds$x, "is d-separated from", ds$y,  "by", ds$z, "p-value, however", p_test$p.value, "\n")
+  }
+}
+```
+
 
 
 
