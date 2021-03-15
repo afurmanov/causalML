@@ -151,10 +151,27 @@ cat("The proportion of true D-separation statements that are also true condition
 
 ### 2.c True d-separation statements among true conditional inpdendence statements (1 point)
 
-What is the proportion of true conditional independence statements that are also true-deseparation statements?
+What is the proportion of true conditional independence statements that are also true-d-separation statements?
 
 ```{r proportion-of-cond-ind-statements}
-cat("The proportion of true conditional independence statements that are also true-deseparation statements", both_indpendent_and_d_separated_counter/length(condition_independence_statements))
+cat("The proportion of true conditional independence statements that are also true-d-separation statements", both_indpendent_and_d_separated_counter/length(condition_independence_statements))
 ```
 
+### 2.d Results of non-redundant d-separation statements (1 point)
 
+How would these results change if we only considered non-redundant d-separation statements?
+
+Answer: Since some redundant d-separation statements do not satisfy conditional independence test therefore
+if they were eliminated the ratio:
+```{r}
+both_indpendent_and_d_separated_counter/length(d_separation_statements)
+```
+would be higher than one calculated above (i.e > 0.918). Similarly 
+
+### 2.e Conclusion (1 point)
+
+Based on these results, how well do the faithfulness assumption and global Markov property assumption hold up with this DAG and dataset?
+
+Answer: Global Markov property holds well, since d-separation
+matches conditional independences staments in about 91% cases (probably more if redundant statemts are eliminated)
+while faithfulness does not hold since conditionally indepence statements matching to d-separation staements only in 33% cases.
