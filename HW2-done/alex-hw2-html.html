@@ -477,14 +477,96 @@ for (ds in d_seps) {
 Y: &quot;A is d-separated from O by E R&quot;</code></pre>
 <p>Statement X implies statement Y because:</p>
 <ol style="list-style-type: lower-alpha">
-<li>they are different only by set of conditioning sets</li>
-<li>conditioning sets in statement X is subset of conditioning set in statement Y</li>
+<li>they are different only by set of conditioning sets and</li>
+<li>conditioning sets in statement X is subset of conditioning set in statement Y and</li>
 <li>“extra” variables in conditioning set in statement Y {R} = {E, R}-{E} is not collider, i.e. adding non-collider to conditioning set should not change d-separation statement</li>
 </ol>
 </div>
+<div id="c-improve-the-brute-force-algorithm-for-finding-true-d-separation-statements-1-point" class="section level3">
+<h3>1.c Improve the brute-force algorithm for finding true d-separation statements (1 point)</h3>
+<p>Based on this understanding of redundancy, how could this algorithm for finding true d-separation statements be made more efficient? [skipped]</p>
 </div>
-<div id="graphviz.plotnet" class="section level2">
-<h2>graphviz.plot(net)</h2>
+<div id="d-conditional-independence-test-on-true-d-separation-statements-4-points" class="section level3">
+<h3>1.d Conditional independence test on true d-separation statements (4 points)</h3>
+<p>A joint distribution <span class="math inline">\({P_{\mathbb{X}}}\)</span> is said to satisfy <strong>global Markov property</strong> with respect to DAG <span class="math inline">\({\mathbb{G}}\)</span> if <span class="math inline">\(A \perp_{\mathbb{G}}B|C \Rightarrow A \perp_{P_{\mathbb{X}} }B|C\)</span> for all disjoint vertex sets A, B, C. In other words, every true d-separation statement in the DAG corresponds to a true conditional independence statement in the joint probability distribution. We don’t know the true underlying joint probability distribution that generated this data, but we do have the data. That means we can do statistical tests for conditional independence, and use some quick and dirty statistical decision theory to decide whether a conditional independence statement is true or false.</p>
+<p>The <code>ci.test</code> function in <code>bnlearn</code> does statistical tests for conditional independence. The null hypothesis in this test is that the conditional independence is true. So our decision critera is going to be:</p>
+<blockquote>
+<p>If p value is below a .05 significance threshold, conclude that the conditional independence statement is false Otherwise conclude it is true.</p>
+</blockquote>
+<pre class="r"><code>.data &lt;- read.table(&quot;survey.txt&quot;, header = TRUE)
+.data[] &lt;- lapply(.data, function(x) as.factor(x))
+
+test_outcome &lt;- ci.test(&#39;T&#39;, &#39;E&#39;, c(&#39;O&#39;, &#39;R&#39;), .data)
+print(test_outcome)</code></pre>
+<pre><code>## 
+##  Mutual Information (disc.)
+## 
+## data:  T ~ E | O + R
+## mi = 9.8836, df = 8, p-value = 0.2733
+## alternative hypothesis: true value is greater than 0</code></pre>
+<pre class="r"><code>print(test_outcome$p.value)</code></pre>
+<pre><code>## [1] 0.2732884</code></pre>
+<pre class="r"><code>alpha &lt;- .05
+print(test_outcome$p.value &gt; alpha)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<p>Evaluate the global Markov property assumption by doing a conditional independence test for each true d-separation statement. Print any test results where the p-value is not greater than .05.</p>
+<pre class="r"><code>for (ds in d_seps) {
+  p_test &lt;- ci.test(ds$x, ds$y, ds$z, .data)
+  if (p_test$p.value &lt;= 0.05) {
+    cat(ds$x, &quot;is d-separated from&quot;, ds$y,  &quot;by&quot;, ds$z, &quot;p-value, however&quot;, p_test$p.value, &quot;\n&quot;)
+  }
+}</code></pre>
+<pre><code>## A is d-separated from O by E S p-value, however 0.02555815 
+## A is d-separated from R by E O p-value, however 0.04196508 
+## O is d-separated from S by A E p-value, however 0.03931652 
+## O is d-separated from S by E T p-value, however 0.02746301 
+## S is d-separated from T by E O p-value, however 0.02680872</code></pre>
+</div>
+<div id="e-conditional-independest-test-and-non-redundant-d-separation-statements-1-point-plus-2-points-extra-credit" class="section level3">
+<h3>1.e Conditional independest test and non-redundant d-separation statements (1 point plus 2 points extra credit)</h3>
+<p>What is apparent about these these printed statements with respect to whether or not the statement is redundant?</p>
+<p>Answer: Printed statements are all redundant.</p>
+</div>
+</div>
+<div id="question-2-faithfulness-assumption" class="section level2">
+<h2>Question 2: Faithfulness assumption</h2>
+<div id="a-true-conditional-independence-statements-4-points" class="section level3">
+<h3>2.a True conditional independence statements (4 points)</h3>
+<p>A joint distribution <span class="math inline">\(P_{\mathbb{X}}\)</span> is <strong>faithful</strong> to DAG <span class="math inline">\({\mathbb{G}}\)</span> if <span class="math inline">\(A \perp_{P_{\mathbb{X}}}B|C \Rightarrow A \perp_{\mathbb{G} }B|C\)</span> for all disjoint vertex set A, B, C. In other words, every true conditional independence statement about the joint distribution corresponds to a true d-separation statement in the DAG Iterate through the <code>arg_sets</code> list again, run the conditional independence test for each argument set, creating a new list of sets where you conclude the conditional independence statement is true.</p>
+<pre class="r"><code>d_separation_statements &lt;- list()
+condition_independence_statements &lt;- list()
+both_indpendent_and_d_separated_counter &lt;- 0
+for (arg_set in arg_sets) {
+    d_separated &lt;- FALSE
+    conditionally_independent &lt;- FALSE
+
+    if (d_sep(bn=net, x=arg_set$x, y=arg_set$y, z=arg_set$z)) {
+      d_separated &lt;- TRUE
+      d_separation_statements &lt;- c(d_separation_statements, list(arg_set))
+    }
+
+  p_test &lt;- ci.test(arg_set$x, arg_set$y, arg_set$z, .data)
+  if (p_test$p.value &gt; 0.05) {
+     conditionally_independent &lt;- TRUE
+     condition_independence_statements &lt;- c(condition_independence_statements, list(arg_set))
+  }
+  if (conditionally_independent &amp;&amp; d_separated) {
+    both_indpendent_and_d_separated_counter &lt;- both_indpendent_and_d_separated_counter + 1
+  }
+}</code></pre>
+</div>
+<div id="b-true-conditional-inpdendence-statements-among-true-d-separation-statements-1-point" class="section level3">
+<h3>2.b True conditional inpdendence statements among true d-separation statements (1 point)</h3>
+<p>Combine that analysis with the analysis from previous questions. What is the proportion of true D-separation statements that are also true conditional independence statements?</p>
+<pre class="r"><code>cat(&quot;The proportion of true D-separation statements that are also true conditional independence statements&quot;, both_indpendent_and_d_separated_counter/length(d_separation_statements))</code></pre>
+<pre><code>## The proportion of true D-separation statements that are also true conditional independence statements 0.9180328</code></pre>
+</div>
+<div id="c-true-d-separation-statements-among-true-conditional-inpdendence-statements-1-point" class="section level3">
+<h3>2.c True d-separation statements among true conditional inpdendence statements (1 point)</h3>
+<p>What is the proportion of true conditional independence statements that are also true-deseparation statements?</p>
+<pre class="r"><code>cat(&quot;The proportion of true conditional independence statements that are also true-deseparation statements&quot;, both_indpendent_and_d_separated_counter/length(condition_independence_statements))</code></pre>
+<pre><code>## The proportion of true conditional independence statements that are also true-deseparation statements 0.3353293</code></pre>
+</div>
 </div>
 
 

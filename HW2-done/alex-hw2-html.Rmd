@@ -62,8 +62,8 @@ Y: "A is d-separated from O by E R"
 
 Statement X implies statement Y because:
                                     
-  a. they are different only by  set of conditioning sets
-  b. conditioning sets in statement X is subset of conditioning set in statement Y
+  a. they are different only by  set of conditioning sets and
+  b. conditioning sets in statement X is subset of conditioning set in statement Y and
   c. "extra" variables in conditioning set in statement Y {R} = {E, R}-{E} is not collider, i.e.
    adding non-collider to conditioning set should not change d-separation statement
 
@@ -84,7 +84,7 @@ The `ci.test` function in `bnlearn` does statistical tests for conditional indep
 
 ```{r}
 .data <- read.table("survey.txt", header = TRUE)
-.data[] <- lapply(survey, function(x) as.factor(x))
+.data[] <- lapply(.data, function(x) as.factor(x))
 
 test_outcome <- ci.test('T', 'E', c('O', 'R'), .data)
 print(test_outcome)
@@ -104,7 +104,57 @@ for (ds in d_seps) {
 }
 ```
 
+### 1.e Conditional independest test and non-redundant d-separation statements (1 point plus 2 points extra credit)
+
+What is apparent about these these printed statements with respect to whether or not the statement is redundant?
+
+Answer: Printed statements are all redundant.
+
+## Question 2: Faithfulness assumption
+
+### 2.a True conditional independence statements (4 points)
+
+A joint distribution $P_{\mathbb{X}}$ is **faithful** to DAG ${\mathbb{G}}$ if $A \perp_{P_{\mathbb{X}}}B|C \Rightarrow  A \perp_{\mathbb{G} }B|C$ for all disjoint vertex set A, B, C. In other words, every true conditional independence statement about the joint distribution corresponds to a true d-separation statement in the DAG  Iterate through the `arg_sets` list again, run the conditional independence test for each argument set, creating a new list of sets where you conclude the conditional independence statement is true.
 
 
+```{r}
+d_separation_statements <- list()
+condition_independence_statements <- list()
+both_indpendent_and_d_separated_counter <- 0
+for (arg_set in arg_sets) {
+    d_separated <- FALSE
+    conditionally_independent <- FALSE
+
+    if (d_sep(bn=net, x=arg_set$x, y=arg_set$y, z=arg_set$z)) {
+      d_separated <- TRUE
+      d_separation_statements <- c(d_separation_statements, list(arg_set))
+    }
+
+  p_test <- ci.test(arg_set$x, arg_set$y, arg_set$z, .data)
+  if (p_test$p.value > 0.05) {
+     conditionally_independent <- TRUE
+     condition_independence_statements <- c(condition_independence_statements, list(arg_set))
+  }
+  if (conditionally_independent && d_separated) {
+    both_indpendent_and_d_separated_counter <- both_indpendent_and_d_separated_counter + 1
+  }
+}
+```
+
+### 2.b True conditional inpdendence statements among true d-separation statements (1 point)
+
+Combine that analysis with the analysis from previous questions. What is the proportion of true D-separation statements that are also true conditional independence statements?
+
+```{r proportion-of-d-sep-statements}
+cat("The proportion of true D-separation statements that are also true conditional independence statements", both_indpendent_and_d_separated_counter/length(d_separation_statements))
+```
+
+### 2.c True d-separation statements among true conditional inpdendence statements (1 point)
+
+What is the proportion of true conditional independence statements that are also true-deseparation statements?
+
+```{r proportion-of-cond-ind-statements}
+cat("The proportion of true conditional independence statements that are also true-deseparation statements", both_indpendent_and_d_separated_counter/length(condition_independence_statements))
+```
 
 
