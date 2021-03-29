@@ -8,6 +8,7 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(bnlearn)
+library(dplyr)
 ```
 
 
@@ -175,3 +176,35 @@ Based on these results, how well do the faithfulness assumption and global Marko
 Answer: Global Markov property holds well, since d-separation
 matches conditional independences staments in about 91% cases (probably more if redundant statemts are eliminated)
 while faithfulness does not hold since conditionally indepence statements matching to d-separation staements only in 33% cases.
+
+## Question 3: Interventions as graph mutilation
+```{r}
+net <- model2network('[A][B|A][C|B:A]')
+nombres <- c('off', 'on')
+cptA <- matrix(c(0.5, 0.5), ncol=2)
+dimnames(cptA) <- list(NULL, nombres)
+cptB <- matrix(c(.8, .2, .1, .9), ncol=2)
+dimnames(cptB) <- list(B = nombres, A = nombres)
+cptC <- matrix(c(.9, .1, .99, .01, .1, .9, .4, .6))
+dim(cptC) <- c(2, 2, 2)
+dimnames(cptC) <-  list(C = nombres, A = nombres, B = nombres)
+model <- custom.fit(net, list(A = cptA, B = cptB, C = cptC))
+graphviz.plot(model)
+```
+
+### 3.a (3 points)
+
+Q: Given this model, use Baye's rule to calculate by hand $P(A = \text{on} \ | \ B = \text{on}, C = \text{on})$.  Show work.
+A:
+    
+#### Calculations:
+    
+![Calculations](calculations.png)
+
+#### Simulations:
+
+```{r simulations}
+sim = rbn(model, 1000000)
+filtered_on_B_on_C_on = filter(sim, B == 'on') %>% filter(C == 'on')
+dim(filter(filtered_on_B_on_C_on, A == 'on'))[1]/dim(filtered_on_B_on_C_on)[1]
+```
