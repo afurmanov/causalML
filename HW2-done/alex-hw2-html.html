@@ -615,7 +615,7 @@ graphviz.plot(model)</code></pre>
 <pre class="r"><code>sim = rbn(model, 1000000)
 filtered_on_B_on_C_on = filter(sim, B == &#39;on&#39;) %&gt;% filter(C == &#39;on&#39;)
 dim(filter(filtered_on_B_on_C_on, A == &#39;on&#39;))[1]/dim(filtered_on_B_on_C_on)[1]</code></pre>
-<pre><code>## [1] 0.751406</code></pre>
+<pre><code>## [1] 0.7489697</code></pre>
 </div>
 </div>
 <div id="c-1-point" class="section level3">
@@ -639,7 +639,7 @@ graphviz.plot(mutilated_model)</code></pre>
 <pre class="r"><code>m_sim = rbn(mutilated_model, 1000000)
 m_filtered_on_B_on_C_on = filter(m_sim, B == &#39;on&#39;) %&gt;% filter(C == &#39;on&#39;)
 dim(filter(m_filtered_on_B_on_C_on, A == &#39;on&#39;))[1]/dim(m_filtered_on_B_on_C_on)[1]</code></pre>
-<pre><code>## [1] 0.4000985</code></pre>
+<pre><code>## [1] 0.4009977</code></pre>
 </div>
 </div>
 
