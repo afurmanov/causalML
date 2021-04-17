@@ -1,0 +1,46 @@
+---
+title: "alex-hw3-html.rmd"
+output:
+  html_document: default
+  ## pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(bnlearn)
+library(dplyr)
+```
+
+
+The following DAG represents a causal model of user behavior in an app.
+
+```{r, collider_adjustment_ex1, echo=F, warning=F, message=F, out.width = "100px"}
+library(bnlearn, quietly = T, warn.conflicts = F)
+dag <- model2network("[U][X][Y|U:X][W|U:X]")
+graphviz.plot(dag)
+```
+
+U represents the user specific preferences.  X represents the introduction of a feature designed to make users make certain in-app purchases, Y was whether or not the user made the purchase, W represents app usage after the feature is introduced.
+
+### 1.1.a 
+You are interested in estimating the causal effect of X on Y.  List all the valid adjustment sets. A valid adjustment set is the set of variables that if you adjust, you will get the unbiased results. (For a formal definition of valid adjustment set, see "ELements of Causal Inference", Definition 6.38, Proposition 6.41) (3 points)
+
+### Answer to 1.1.a
+{}, {U} {U, W}
+
+### 1.1.b 
+What would happen if you adjusted for W? (2 points)
+
+### Answer to 1.1.b
+Since W is a collider, conditioning on W would open path X->W<-U->Y, and our evaluated
+casual effect of X on Y would create bias and will be incorrect.
+
+### 1.1.c 
+Suppose you want to assess the effect of X on Y for users who have a high amount of app usage. Fill in the blanks on the right-hand-side for the adjustment formula of interest. (4 points)  
+\begin{align*} 
+P(Y = y | do(X=x), W=high) = \sum_{?} P(Y = y | ?)P(?|?) 
+\end{align*} 
+
+### Answer to 1.1.c
+![](right-hand-side-adjustment-formula.png)
+
