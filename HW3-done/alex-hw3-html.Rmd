@@ -87,7 +87,24 @@ graphviz.plot(dag)
 List all of the sets of variables that satisfy the backdoor criterion to determine the causal effect of X on Y. (3 points)
 
 ### Answer to 1.3.a
-{Z, Z}, {Z, D}, {Z, C, D}, {Z, B}, {Z, A}, {Z, B, A}
+{Z, C}, {Z, D}, {Z, C, D}, {Z, B}, {Z, A}, {Z, B, A}
 
+### 1.3.b 
+List all of the minimal sets of variables that satisfy the backdoor criterion to determine the causal effect of X on Y (a minimal valid adjustment set here means if you removed any one of the variables from the set, it would no longer be a valid adjustment set). (3 points) 
+
+### Answer to 1.3.b 
+{Z, C}, {Z, D}, {Z, B}, {Z, A}
+
+### 1.3.c
+List all the minimal sets of variables that need to be measured in order to identify the effect of D on Y. (3 points)
+
+### Answer to 1.3.c
+{C}, {Z, B}, {Z, A}, {Z, X}, {Z, W}
+
+### 1.3.d
+Now suppose we want to know the causal effect of intervening on 2 variables.  List all the minimal sets of variables that need to be measured in order to identify the effect of set {D, W} on Y, i.e., $P(Y=y|do(D=d), do(W=w))$. (3 points)
+
+### Answer to 1.3.d
+{C, X}, {Z}
 
 
