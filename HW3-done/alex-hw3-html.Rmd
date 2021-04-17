@@ -44,3 +44,34 @@ P(Y = y | do(X=x), W=high) = \sum_{?} P(Y = y | ?)P(?|?)
 ### Answer to 1.1.c
 ![](right-hand-side-adjustment-formula.png)
 
+
+## 1.2 (6 points)
+
+Consider the following DAG.
+
+```{r, collider_adjustment_ex2, echo=F, warning=F, message=F, out.width = "100px"}
+dag <- model2network("[E][A][Z|E:A][X|E:Z][Y|A:Z:X]")
+graphviz.plot(dag)
+```
+
+You are interest in estimating the causal effect of X on Y.
+
+### 1.2.a
+Is the set containing only Z a valid adjustment set?  Why or why not? (2 points)
+
+### Answer to 1.2.a
+Z is not valid adjustment set, Z is collider and conditioning on it would open
+path X <- E -> Z <- A -> Y
+
+### 1.2.b
+List all of the adjustment sets that blocks all the back doors(there are three) and write the adjustment formula for each adjustment set. (3 points) 
+
+### Answer to 1.2.b
+Valid adjustment sets are {Z, E}, {Z, A} and {Z, A, E}
+
+### 1.2.c
+Suppose that E and A are both observable, but observing E costs \$10 per data point and observing A costs \$5 per data point.  Which conditioning set do you go with? (1 point) 
+
+### Answer to 1.2.c
+Conditioning set would be {Z,A} because it is cheaper than {Z, E} or {Z, A, E}
+
